@@ -25,7 +25,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'w-k7xx44*y)tq&@b5=9bniqw_q486rywjacy4+vo_**94lh=bd'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = []
 
@@ -62,7 +62,7 @@ MIDDLEWARE = [
 
 CORS_ORIGIN_ALLOW_ALL = False
 CORS_ORIGIN_WHITELIST = (
-    'http://localhost:8081',
+    'http://localhost:8080',
 )
 
 ROOT_URLCONF = 'DjangoRestApisPostgreSQL.urls'
