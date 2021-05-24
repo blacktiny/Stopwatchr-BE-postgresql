@@ -59,7 +59,6 @@ MIDDLEWARE = [
 
 CORS_ORIGIN_ALLOW_ALL = False
 CORS_ORIGIN_WHITELIST = (
-    'postgres://otnszidvnhdozf:6c08e103e8c3c2de5a84dad16c7d271a220ac06a7bfe4610c3be6abea1f64079@ec2-52-1-115-6.compute-1.amazonaws.com:5432/d3nc50dkj27j93',
     'http://localhost:8081',
 )
 
