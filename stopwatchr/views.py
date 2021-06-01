@@ -4,8 +4,8 @@ from django.http.response import JsonResponse
 from rest_framework.parsers import JSONParser 
 from rest_framework import status
  
-from stopwatchr.models import users
-from stopwatchr.serializers import UsersSerializer
+from stopwatchr.models import users, stocks
+from stopwatchr.serializers import UsersSerializer, StocksSerializer
 from rest_framework.decorators import api_view
 
 
@@ -74,3 +74,28 @@ def user_login(request):
                 return JsonResponse({ "error": "user password doesn't correct." }, status=status.HTTP_404_NOT_FOUND)
             return JsonResponse({ "error": "user doesn't exist." }, status=status.HTTP_404_NOT_FOUND)
         return JsonResponse({ "error": "params don't correct." }, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET', 'POST', 'DELETE'])
+def stocks_list(request):
+    if request.method == 'GET':
+        stocks_list = stocks.objects.all()
+        
+        # username = request.GET.get('username', None)
+        # if username is not None:
+        #     stopwatchr = stopwatchr.filter(username__icontains=username)
+        
+        stocks_serializer = StocksSerializer(stocks_list, many=True)
+        return JsonResponse(stocks_serializer.data, safe=False)
+        # 'safe=False' for objects serialization
+
+    elif request.method == 'POST':
+        stock_data = JSONParser().parse(request)
+        stock_serializer = StocksSerializer(data=stock_data)
+        if stock_serializer.is_valid():
+            stock_serializer.save()
+            return JsonResponse(stock_serializer.data, status=status.HTTP_201_CREATED) 
+        return JsonResponse(stock_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == 'DELETE':
+        count = stocks.objects.all().delete()
+        return JsonResponse({'message': '{} stopwatchr were deleted successfully!'.format(count[0])}, status=status.HTTP_204_NO_CONTENT)
