@@ -57,3 +57,20 @@ def users_detail(request, pk):
     elif request.method == 'DELETE': 
         user_data.delete() 
         return JsonResponse({'message': 'users was deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
+
+@api_view(['POST'])
+def user_login(request):
+    if request.method == 'POST':
+        stopwatchr = users.objects.all()
+
+        login_data = JSONParser().parse(request)
+        if login_data:
+            nameMatchedUser = stopwatchr.filter(username=login_data.get('username'))
+            if nameMatchedUser:
+                pwdMatchedUser = nameMatchedUser.filter(password=login_data.get('password'))
+                if pwdMatchedUser:
+                    matchedUser_serializer = UsersSerializer(pwdMatchedUser, many=True)
+                    return JsonResponse(matchedUser_serializer.data[0], status=status.HTTP_200_OK)
+                return JsonResponse({ "error": "user password doesn't correct." }, status=status.HTTP_404_NOT_FOUND)
+            return JsonResponse({ "error": "user doesn't exist." }, status=status.HTTP_404_NOT_FOUND)
+        return JsonResponse({ "error": "params don't correct." }, status=status.HTTP_400_BAD_REQUEST)
