@@ -99,3 +99,26 @@ def stocks_list(request):
     elif request.method == 'DELETE':
         count = stocks.objects.all().delete()
         return JsonResponse({'message': '{} stopwatchr were deleted successfully!'.format(count[0])}, status=status.HTTP_204_NO_CONTENT)
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def stocks_detail(request, pk):
+    try: 
+        stocks_data = stocks.objects.get(pk=pk) 
+    except stocks.DoesNotExist: 
+        return JsonResponse({'message': 'The stocks does not exist'}, status=status.HTTP_404_NOT_FOUND) 
+ 
+    if request.method == 'GET':
+        stocks_serializer = StocksSerializer(stocks_data) 
+        return JsonResponse(stocks_serializer.data)
+ 
+    elif request.method == 'PUT': 
+        stock_updated_data = JSONParser().parse(request) 
+        stock_serializer = StocksSerializer(stocks_data, data=stock_updated_data) 
+        if stock_serializer.is_valid(): 
+            stock_serializer.save() 
+            return JsonResponse(stock_serializer.data) 
+        return JsonResponse(stock_serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
+ 
+    elif request.method == 'DELETE': 
+        stocks_data.delete() 
+        return JsonResponse({'message': 'The stock was deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)

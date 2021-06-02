@@ -89,26 +89,26 @@ WSGI_APPLICATION = 'DjangoRestApisPostgreSQL.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'stopwatchr',
-        'USER': 'postgres',
-        'PASSWORD': 'admin',
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
-    }
-}
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'd3nc50dkj27j93',
-#         'USER': 'otnszidvnhdozf',
-#         'PASSWORD': '6c08e103e8c3c2de5a84dad16c7d271a220ac06a7bfe4610c3be6abea1f64079',
-#         'HOST': 'ec2-52-1-115-6.compute-1.amazonaws.com',
+#         'NAME': 'stopwatchr',
+#         'USER': 'postgres',
+#         'PASSWORD': 'admin',
+#         'HOST': '127.0.0.1',
 #         'PORT': '5432',
 #     }
 # }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'd3nc50dkj27j93',
+        'USER': 'otnszidvnhdozf',
+        'PASSWORD': '6c08e103e8c3c2de5a84dad16c7d271a220ac06a7bfe4610c3be6abea1f64079',
+        'HOST': 'ec2-52-1-115-6.compute-1.amazonaws.com',
+        'PORT': '5432',
+    }
+}
 
 
 # Password validation
