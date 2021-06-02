@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+import django_heroku
+import dj_database_url
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -55,11 +57,12 @@ MIDDLEWARE = [
     # CORS
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware'
 ]
 
 CORS_ORIGIN_ALLOW_ALL = False
 CORS_ORIGIN_WHITELIST = (
-    'http://localhost:8081',
+    'http://localhost:8080',
 )
 
 ROOT_URLCONF = 'DjangoRestApisPostgreSQL.urls'
@@ -96,6 +99,16 @@ DATABASES = {
         'PORT': '5432',
     }
 }
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'd3nc50dkj27j93',
+#         'USER': 'otnszidvnhdozf',
+#         'PASSWORD': '6c08e103e8c3c2de5a84dad16c7d271a220ac06a7bfe4610c3be6abea1f64079',
+#         'HOST': 'ec2-52-1-115-6.compute-1.amazonaws.com',
+#         'PORT': '5432',
+#     }
+# }
 
 
 # Password validation
@@ -134,4 +147,14 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATIC_URL = '/static/'
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
+]
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+
+django_heroku.settings(locals())
