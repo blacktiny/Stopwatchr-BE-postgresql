@@ -80,9 +80,9 @@ def stocks_list(request):
     if request.method == 'GET':
         stocks_list = stocks.objects.all()
         
-        # username = request.GET.get('username', None)
-        # if username is not None:
-        #     stopwatchr = stopwatchr.filter(username__icontains=username)
+        userId = request.GET.get('userId', None)
+        if userId is not None:
+            stocks_list = stocks_list.filter(userId=userId)
         
         stocks_serializer = StocksSerializer(stocks_list, many=True)
         return JsonResponse(stocks_serializer.data, safe=False)
