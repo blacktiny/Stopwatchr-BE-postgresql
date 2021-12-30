@@ -1,9 +1,9 @@
-from django.conf.urls import url 
+from django.urls import path
 from stopwatchr import views 
  
-urlpatterns = [ 
-    url(r'^api/users$', views.users_list),
-    url(r'^api/users/(?P<pk>[0-9]+)$', views.users_detail),
-    url(r'^api/login$', views.user_login),
-    url(r'^api/stocks$', views.stocks_list)
+urlpatterns = [
+    path('api/users', views.users_list),
+    path('api/users/<int:pk>', views.users_detail),
+    path('api/login', views.user_login),
+    path('api/stocks', views.stocks_list)
 ]

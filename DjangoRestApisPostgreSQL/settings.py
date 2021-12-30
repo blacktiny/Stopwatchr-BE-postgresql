@@ -45,6 +45,8 @@ INSTALLED_APPS = [
     'stopwatchr.apps.StopwatchrConfig',
     # CORS
     'corsheaders',
+    # CronTab
+    'django_crontab',
 ]
 
 MIDDLEWARE = [
@@ -65,7 +67,7 @@ CORS_ORIGIN_WHITELIST = (
     'http://localhost:8080',
 )
 
-ROOT_URLCONF = 'DjangoRestApisPostgreSQL.urls'
+ROOT_URLCONF = 'stopwatchr.urls'
 
 TEMPLATES = [
     {
@@ -94,7 +96,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'stopwatchr',
         'USER': 'postgres',
-        'PASSWORD': 'admin',
+        'PASSWORD': '123123',
         'HOST': '127.0.0.1',
         'PORT': '5432',
     }
@@ -109,6 +111,11 @@ DATABASES = {
 #         'PORT': '5432',
 #     }
 # }
+
+# Set up cron jobs
+CRONJOBS = [
+    ('*/2 * * * *', 'stopwatchr.cron.alert_cron_job', '>> /path/to/log/file.log')
+]
 
 
 # Password validation
