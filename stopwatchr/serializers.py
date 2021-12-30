@@ -1,6 +1,5 @@
-from django.db.models import fields
 from rest_framework import serializers 
-from stopwatchr.models import stocks, users
+from stopwatchr.models import alerts, stocks, users
  
  
 class UsersSerializer(serializers.ModelSerializer):
@@ -12,16 +11,38 @@ class UsersSerializer(serializers.ModelSerializer):
             'username',
             'useremail',
             'password',
+            'alert_options',
         )
 
 class StocksSerializer(serializers.ModelSerializer):
     class Meta:
         model = stocks
         fields = (
+            'id',
             'stockId',
-            'userId',
+            'user',
             'type',
             'name',
             'entry',
             'stop',
+            'last_updated'
+        )
+
+class AlertsSerializer(serializers.ModelSerializer):
+    stock = StocksSerializer(
+        many=False,
+        read_only=True
+    )
+    user = UsersSerializer(
+        many=False,
+        read_only=True
+    )
+    class Meta:
+        model = alerts
+        fields = (
+            'id',
+            'stock',
+            'user',
+            'created',
+            'is_archived',
         )
