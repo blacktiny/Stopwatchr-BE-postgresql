@@ -5,5 +5,6 @@ urlpatterns = [
     path('api/users', views.users_list),
     path('api/users/<int:pk>', views.users_detail),
     path('api/login', views.user_login),
-    path('api/stocks', views.stocks_list)
+    path('api/stocks', views.stocks_list),
+    path('api/alerts', views.alerts_list)
 ]

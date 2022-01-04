@@ -25,6 +25,7 @@ class StocksSerializer(serializers.ModelSerializer):
             'name',
             'entry',
             'stop',
+            'current',
             'last_updated'
         )
 

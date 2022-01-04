@@ -1,13 +1,22 @@
-from django.shortcuts import render
-
+from django.db.models.expressions import Case, Value, When
 from django.http.response import JsonResponse
 from rest_framework.parsers import JSONParser 
 from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.authentication import JWTTokenUserAuthentication
+from rest_framework.permissions import IsAuthenticated, AllowAny
  
-from stopwatchr.models import users, stocks
-from stopwatchr.serializers import UsersSerializer, StocksSerializer
-from rest_framework.decorators import api_view
+from stopwatchr.models import alerts, users, stocks
+from stopwatchr.serializers import AlertsSerializer, UsersSerializer, StocksSerializer
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
 
+def get_tokens_for_user(user):
+    refresh = RefreshToken.for_user(user)
+
+    return {
+        'refresh': str(refresh),
+        'access': str(refresh.access_token),
+    }
 
 @api_view(['GET', 'POST', 'DELETE'])
 def users_list(request):
@@ -33,8 +42,8 @@ def users_list(request):
     elif request.method == 'DELETE':
         count = users.objects.all().delete()
         return JsonResponse({'message': '{} stopwatchr were deleted successfully!'.format(count[0])}, status=status.HTTP_204_NO_CONTENT)
- 
- 
+
+
 @api_view(['GET', 'PUT', 'DELETE'])
 def users_detail(request, pk):
     try: 
@@ -58,6 +67,7 @@ def users_detail(request, pk):
         user_data.delete() 
         return JsonResponse({'message': 'users was deleted successfully!'}, status=status.HTTP_204_NO_CONTENT)
 
+
 @api_view(['POST'])
 def user_login(request):
     if request.method == 'POST':
@@ -71,22 +81,27 @@ def user_login(request):
                 if pwdMatchedUser:
                     matchedUser_serializer = UsersSerializer(pwdMatchedUser, many=True)
                     return JsonResponse(matchedUser_serializer.data[0], status=status.HTTP_200_OK)
-                return JsonResponse({ "error": "user password doesn't correct." }, status=status.HTTP_404_NOT_FOUND)
-            return JsonResponse({ "error": "user doesn't exist." }, status=status.HTTP_404_NOT_FOUND)
+                    # return JsonResponse(get_tokens_for_user(pwdMatchedUser.get()), status=status.HTTP_200_OK)
+                return JsonResponse({ "error": "wrong password." }, status=status.HTTP_200_OK)
+            return JsonResponse({ "error": "user doesn't exist." }, status=status.HTTP_200_OK)
         return JsonResponse({ "error": "params don't correct." }, status=status.HTTP_400_BAD_REQUEST)
 
+
 @api_view(['GET', 'POST', 'DELETE'])
+# @permission_classes([IsAuthenticated])
+# @authentication_classes([JWTTokenUserAuthentication])
 def stocks_list(request):
     if request.method == 'GET':
-        stocks_list = stocks.objects.all()
-        
-        # username = request.GET.get('username', None)
-        # if username is not None:
-        #     stopwatchr = stopwatchr.filter(username__icontains=username)
-        
-        stocks_serializer = StocksSerializer(stocks_list, many=True)
-        return JsonResponse(stocks_serializer.data, safe=False)
-        # 'safe=False' for objects serialization
+        userId = request.GET.get('userId', None)
+        if userId is not None:
+            stocks_list = stocks.objects.all()
+            stocks_list = stocks_list.filter(
+                user=Value(userId)
+            )
+
+            stocks_serializer = StocksSerializer(stocks_list, many=True)
+            return JsonResponse(stocks_serializer.data, safe=False)
+        return JsonResponse({ 'error': 'Invalid params' }, status=status.HTTP_400_BAD_REQUEST)
 
     elif request.method == 'POST':
         stock_data = JSONParser().parse(request)
@@ -99,3 +114,31 @@ def stocks_list(request):
     elif request.method == 'DELETE':
         count = stocks.objects.all().delete()
         return JsonResponse({'message': '{} stopwatchr were deleted successfully!'.format(count[0])}, status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['GET', 'DELETE', 'PUT'])
+def alerts_list(request):
+    if request.method == 'GET':
+        userId = request.GET.get('userId', None)
+        alerts_list = alerts.objects.all()
+        alerts_list = alerts_list.filter(
+            user__id=Value(userId)
+        )
+
+        alerts_serializer = AlertsSerializer(alerts_list, many=True)
+        return JsonResponse(alerts_serializer.data, safe=False)
+
+    elif request.method == 'PUT':
+        params = JSONParser().parse(request)
+        alerts_list = alerts.objects.all()
+        result = alerts_list.filter(
+            user__id=params.get('user_id'),
+            id__in=params.get('ids_list')
+        ).update(is_archived=True)
+        if result > 0:
+            return JsonResponse({ 'success': True }, status=status.HTTP_200_OK)
+        return JsonResponse({ 'success': False }, status=status.HTTP_400_BAD_REQUEST)
+
+    # elif request.method == 'DELETE':
+    #     count = stocks.objects.all().delete()
+    #     return JsonResponse({'message': '{} stopwatchr were deleted successfully!'.format(count[0])}, status=status.HTTP_204_NO_CONTENT)
