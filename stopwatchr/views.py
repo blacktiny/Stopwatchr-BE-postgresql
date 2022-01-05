@@ -1,14 +1,15 @@
-from django.db.models.expressions import Case, Value, When
+from django.conf import settings
+from django.db.models.expressions import Value
 from django.http.response import JsonResponse
-from rest_framework.parsers import JSONParser 
 from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.parsers import JSONParser 
+from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.authentication import JWTTokenUserAuthentication
-from rest_framework.permissions import IsAuthenticated, AllowAny
- 
+import jwt
+
 from stopwatchr.models import alerts, users, stocks
 from stopwatchr.serializers import AlertsSerializer, UsersSerializer, StocksSerializer
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
 
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
@@ -29,15 +30,23 @@ def users_list(request):
         
         users_serializer = UsersSerializer(stopwatchr, many=True)
         return JsonResponse(users_serializer.data, safe=False)
-        # 'safe=False' for objects serialization
  
     elif request.method == 'POST':
         users_data = JSONParser().parse(request)
-        users_serializer = UsersSerializer(data=users_data)
-        if users_serializer.is_valid():
-            users_serializer.save()
-            return JsonResponse(users_serializer.data, status=status.HTTP_201_CREATED) 
-        return JsonResponse(users_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # check if username is duplicated
+        all_users = users.objects.all()
+        matched_user = all_users.filter(username=users_data.get('username'))
+        if not matched_user:
+            # register
+            users_serializer = UsersSerializer(data=users_data)
+            if users_serializer.is_valid():
+                users_serializer.save()
+
+                # get the new registered user data from db
+                new_user = users.objects.filter(username=users_data.get('username'))
+                return JsonResponse(get_tokens_for_user(new_user.get()), status=status.HTTP_201_CREATED)
+            return JsonResponse(users_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({ "error": "Username already exists." }, status=status.HTTP_200_OK)
     
     elif request.method == 'DELETE':
         count = users.objects.all().delete()
@@ -79,17 +88,16 @@ def user_login(request):
             if nameMatchedUser:
                 pwdMatchedUser = nameMatchedUser.filter(password=login_data.get('password'))
                 if pwdMatchedUser:
-                    matchedUser_serializer = UsersSerializer(pwdMatchedUser, many=True)
-                    return JsonResponse(matchedUser_serializer.data[0], status=status.HTTP_200_OK)
-                    # return JsonResponse(get_tokens_for_user(pwdMatchedUser.get()), status=status.HTTP_200_OK)
+                    # matchedUser_serializer = UsersSerializer(pwdMatchedUser, many=True)
+                    # return JsonResponse(matchedUser_serializer.data[0], status=status.HTTP_200_OK)
+                    return JsonResponse(get_tokens_for_user(pwdMatchedUser.get()), status=status.HTTP_200_OK)
                 return JsonResponse({ "error": "wrong password." }, status=status.HTTP_200_OK)
             return JsonResponse({ "error": "user doesn't exist." }, status=status.HTTP_200_OK)
         return JsonResponse({ "error": "params don't correct." }, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET', 'POST', 'DELETE'])
-# @permission_classes([IsAuthenticated])
-# @authentication_classes([JWTTokenUserAuthentication])
+@permission_classes([IsAuthenticated])
 def stocks_list(request):
     if request.method == 'GET':
         userId = request.GET.get('userId', None)
@@ -117,12 +125,16 @@ def stocks_list(request):
 
 
 @api_view(['GET', 'DELETE', 'PUT'])
+@permission_classes([IsAuthenticated])
 def alerts_list(request):
+    token = request.headers.get('Authorization')
+    token = token.replace('Bearer ', '')
+    decoded_token = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+
     if request.method == 'GET':
-        userId = request.GET.get('userId', None)
         alerts_list = alerts.objects.all()
         alerts_list = alerts_list.filter(
-            user__id=Value(userId)
+            user__id=Value(decoded_token.get('user_id'))
         )
 
         alerts_serializer = AlertsSerializer(alerts_list, many=True)
@@ -132,7 +144,7 @@ def alerts_list(request):
         params = JSONParser().parse(request)
         alerts_list = alerts.objects.all()
         result = alerts_list.filter(
-            user__id=params.get('user_id'),
+            user__id=decoded_token.get('user_id'),
             id__in=params.get('ids_list')
         ).update(is_archived=True)
         if result > 0:
