@@ -102,6 +102,8 @@ INSTALLED_APPS = [
     'django_crontab',
     # Firebase
     'fcm_django',
+    # Django ios storekit
+    'storekit',
 ]
 
 MIDDLEWARE = [

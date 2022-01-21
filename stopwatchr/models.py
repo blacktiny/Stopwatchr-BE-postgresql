@@ -25,6 +25,7 @@ class users(AbstractBaseUser):
         choices=DAILY_OPTIONS_CHOICES,
         default=DAILY,
     )
+    # todo: add new fields for subscription
 
 class stocks(models.Model):
     id = models.AutoField(primary_key=True)

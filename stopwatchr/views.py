@@ -1,3 +1,5 @@
+import jwt
+
 from django.conf import settings
 from django.db.models.expressions import Value
 from django.http.response import JsonResponse
@@ -6,7 +8,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.parsers import JSONParser 
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
-import jwt
+from storekit.errors import AppValidationError
+from storekit.receipt import subscribe_receipt
 
 from stopwatchr.models import alerts, users, stocks
 from stopwatchr.serializers import AlertsSerializer, UsersSerializer, StocksSerializer
@@ -154,3 +157,30 @@ def alerts_list(request):
     # elif request.method == 'DELETE':
     #     count = stocks.objects.all().delete()
     #     return JsonResponse({'message': '{} stopwatchr were deleted successfully!'.format(count[0])}, status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def receive_subscribe_receipt(request):
+    token = request.headers.get('Authorization')
+    token = token.replace('Bearer ', '')
+    decoded_token = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+    user_id = decoded_token.get('user_id')
+
+    if request.method == 'POST':
+        try:
+            body_data = JSONParser().parse(request)
+            verify_result = subscribe_receipt(receipt=body_data.get('receipt-data'), sandbox=True)
+
+            if verify_result:
+                # todo: complete the user data with subscription info
+                # users_list = users.objects.all()
+                # result = users_list.filter(
+                #     id=user_id,
+                # ).update()
+                # if result > 0:
+                    return JsonResponse({ 'success': True }, status=status.HTTP_200_OK)
+            return JsonResponse({ 'success': False }, safe=False)
+                
+        except AppValidationError or AttributeError:
+            return JsonResponse({ 'success': False }, status=status.HTTP_400_BAD_REQUEST)
