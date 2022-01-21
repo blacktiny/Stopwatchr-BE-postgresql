@@ -12,9 +12,15 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 
 import os
 import django_heroku
-import dj_database_url
 
 from datetime import timedelta
+
+import firebase_admin
+from firebase_admin import credentials
+
+cred = credentials.Certificate('/Volumes/data/Projects/Fullmetalworkshop/Stopwatchr-BE-postgresql/stopwatchr-a09c9-1f48767e6f78.json')
+firebase_admin.initialize_app(cred)
+
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -94,6 +100,8 @@ INSTALLED_APPS = [
     'corsheaders',
     # CronTab
     'django_crontab',
+    # Firebase
+    'fcm_django',
 ]
 
 MIDDLEWARE = [
@@ -163,6 +171,26 @@ DATABASES = {
 CRONJOBS = [
     ('*/2 * * * *', 'stopwatchr.cron.alert_cron_job', '>> /path/to/log/file.log')
 ]
+
+# initialize firebase app
+# FIREBASE_APP = initialize_app()
+
+FCM_DJANGO_SETTINGS = {
+     # default: _('FCM Django')
+    # "APP_VERBOSE_NAME": "[string for AppConfig's verbose_name]",
+    "FCM_SERVER_KEY": 'AAAAUGuyCuA:APA91bFcYC1UzOPuEA-DnBMMfAAAHTolhS4QjSkBtWEOeE0kVe-2yWtdU-H0PoZqHWSu985yHXjF_ooHgjNs7mv79-01dZVthqp4Mbtv_SPf4yiZXXrPsBgqd2exf2MHarhMdc2nchr6',
+     # true if you want to have only one active device per registered user at a time
+     # default: False
+    # "ONE_DEVICE_PER_USER": True/False,
+     # devices to which notifications cannot be sent,
+     # are deleted upon receiving error response from FCM
+     # default: False
+    # "DELETE_INACTIVE_DEVICES": True/False,
+    # Transform create of an existing Device (based on registration id) into
+                # an update. See the section
+    # "Update of device with duplicate registration ID" for more details.
+    "UPDATE_ON_DUPLICATE_REG_ID": True,
+}
 
 
 # Password validation
